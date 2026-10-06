@@ -7,6 +7,7 @@ function tablazat()
 {
     $adatok = '';
     $keszAdatok = array_map("szelet",file("save.txt"));
+
     if(isset($_GET["rendezes"])){
         if($_GET["rendezes"]=="asc"){
             //mi szerint rendezünk
@@ -19,17 +20,21 @@ function tablazat()
             //mi szerint rendezünk
             $index = intval($_GET["oszlop"])-1;
             usort($keszAdatok, function($a, $b) use ($index) {
-                return $b[$index] <=> $a[$index]; // Növekvő sorrend
+                return $b[$index] <=> $a[$index]; // Csökkenő sorrend
             });
         }
     }
+
     for($i=0; $i<count($keszAdatok); $i++){
         $adatok .='<tr>';
-        for($k=0; $k<count($keszAdatok[0]); $k++){
-            $adatok .='<td>';
-            $adatok .=$keszAdatok[$i][$k];
-            $adatok .='</td>';
-        }
+        $adatok .='<td>';
+        $adatok .=$keszAdatok[$i][0];
+        $adatok .='</td>';
+        $adatok .='<td>';
+        $adatok .=$keszAdatok[$i][1];
+        $adatok .='</td>';$adatok .='<td>';
+        $adatok .=$keszAdatok[$i][2];
+        $adatok .='</td>';
         $adatok .='</tr>';
     }
     $szoveg = '

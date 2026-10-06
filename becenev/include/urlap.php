@@ -35,7 +35,6 @@ return '<section id="kapcsolat" class="d-flex align-items-center">
 }
 
 function feldolgozas(){
-
     if(isset($_POST["submit"])){
         file_put_contents('save.txt', $_POST['nev'] .";". $_POST['szuletes'] . ';'. $_POST['becenev'] . PHP_EOL, FILE_APPEND);
         header("location:".uri(1));

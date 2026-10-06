@@ -1,5 +1,4 @@
 <?php
-
 switch ($_GET["menu"] ?? 0) {
     case 1:
     default:
