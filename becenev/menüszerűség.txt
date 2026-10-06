@@ -1,0 +1,4 @@
+menüszerűség
+főoldal legyen egy űrlap ami bekér nevet születési dátumat és becenevet
+másik oldal megjeleníti a becenév, név, születési dátum sorrendben táblázatban
+extra: lehessen rendezni név becenév és dátum szerint növ és csökkenbe is.

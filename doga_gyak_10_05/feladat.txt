@@ -1,0 +1,4 @@
+Oldal 3 részre bontva 3 menüponttal.
+főoldal -> szöveg kép
+aloldal -> cím hosszabb szöveg, szöveg körbefuttatva a kép mellett
+űrlap -> név email üzenet mezőkkel (hosszabb üzenet) fájlba mentése a beküldött eredménynek
