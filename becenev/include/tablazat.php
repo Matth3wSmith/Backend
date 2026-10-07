@@ -7,7 +7,7 @@ function tablazat()
 {
     $adatok = '';
     $keszAdatok = array_map("szelet",file("save.txt"));
-
+    
     if(isset($_GET["rendezes"])){
         if($_GET["rendezes"]=="asc"){
             //mi szerint rendezünk
@@ -32,7 +32,8 @@ function tablazat()
         $adatok .='</td>';
         $adatok .='<td>';
         $adatok .=$keszAdatok[$i][1];
-        $adatok .='</td>';$adatok .='<td>';
+        $adatok .='</td>';
+        $adatok .='<td>';
         $adatok .=$keszAdatok[$i][2];
         $adatok .='</td>';
         $adatok .='</tr>';
