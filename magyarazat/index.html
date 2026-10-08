@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PHP Projekt Működése - Dokumentáció</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Prism.js CSS (Kódszínezéshez) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <style>
+        body { padding-top: 2rem; padding-bottom: 4rem; background-color: #f8f9fa; }
+        .file-card { margin-bottom: 2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .mermaid { display: flex; justify-content: center; margin: 2rem 0; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1, h2, h3 { color: #2c3e50; }
+        .code-header { background: #2d2d2d; color: #ccc; padding: 0.5rem 1rem; border-radius: 6px 6px 0 0; font-family: monospace; border-bottom: 1px solid #444; }
+        /* Javítva: Minden <pre> kapja meg a sötét hátteret, ha a JS esetleg megakadna */
+        pre { background-color: #2d2d2d !important; margin-top: 0 !important; border-radius: 0 0 6px 6px !important; }
+        pre[class*="language-"] { margin-top: 0; border-radius: 0 0 6px 6px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="text-center mb-5">
+        <h1 class="display-4 fw-bold">PHP Projekt Architektúra</h1>
+        <p class="lead">Ismerd meg lépésről lépésre, hogyan épül fel egy komponens-alapú PHP weboldal!</p>
+    </header>
+
+    <!-- Fájlok kapcsolata diagram (Mermaid) -->
+    <section>
+        <h2>1. Hogyan kapcsolódnak egymáshoz a fájlok?</h2>
+        <p>Az alábbi diagram azt mutatja be, hogy a böngészőből érkező kérések hogyan áramlanak át a rendszeren. Ezt az építészeti mintát <strong>Front Controller</strong>-nek hívjuk, mert minden forgalom egyetlen központi kapun (az <code>index.php</code>-n) keresztül érkezik.</p>
+        
+        <div class="mermaid">
+            graph TD
+                User((Böngésző)) -->|Kérés pl. ?menu=3| Index[index.php<br/>Front Controller]
+                Index --> Func[include/functions.php<br/>Segédfüggvények]
+                Index --> Router[include/router.php<br/>Útválasztó]
+                
+                Router -->|menu=1| Fooldal[include/fooldal.php<br/>Tartalom generálás]
+                Router -->|menu=2| Aloldal[include/aloldal.php<br/>Tartalom generálás]
+                Router -->|menu=3| Urlap[include/urlap.php<br/>Űrlap és Feldolgozás]
+                Urlap -.->|Mentés| Save[(save.txt<br/>Adattárolás)]
+                
+                Index --> Layout[include/layout.php<br/>HTML Keret]
+                Layout --> Navbar[include/navbar.php<br/>Menü]
+                Layout -.->|Kiíratja a tartalmat| MainContent{{$mainContent változó}}
+        </div>
+    </section>
+
+    <hr class="my-5">
+
+    <section>
+        <h2>2. A fájlok részletes magyarázata</h2>
+        <p>Görgess lefelé, hogy megértsd az egyes fájlok szerepét a rendszerben!</p>
+
+        <!-- INDEX.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">index.php - A Központi Irányító</h3>
+                <p><strong>Szerepe:</strong> Ez a <em>Front Controller</em>, azaz a belépési pont. Ahelyett, hogy minden oldalhoz külön főfájlt hoznánk létre (pl. kapcsolat.php, rólunk.php), minden kérés ide fut be. Ő a felelős azért, hogy a megfelelő sorrendben "összeszerelje" az oldal darabkáit (függvények betöltése, útvonal eldöntése, majd a kinézet betöltése).</p>
+                <div class="code-wrapper">
+                    <div class="code-header">index.php</div>
+<pre class="language-php"><code class="language-php">&lt;?php
+    // 1. Lépés: Segédfüggvények betöltése (require_once: kritikus hiba, ha nincs meg)
+    require_once("include/functions.php");
+
+    // 2. Lépés: Útválasztó betöltése (eldönti melyik tartalom kell)
+    include_once("include/router.php");
+
+    // 3. Lépés: A kinézet betöltése (megjeleníti a router által kigenerált tartalmat)
+    include_once("include/layout.php");
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- FUNCTIONS.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">include/functions.php - Segédfüggvények</h3>
+                <p><strong>Szerepe:</strong> Itt tároljuk azokat a kódokat, amelyeket a projekt több pontján is újra fel akarunk használni. Ilyen a <code>uri()</code> függvény, ami a menü linkek generálásáért felel. A <code>htmlspecialchars</code> használata fontos biztonsági lépés (XSS támadások ellen véd).</p>
+                <div class="code-wrapper">
+                    <div class="code-header">include/functions.php</div>
+<pre class="language-php"><code class="language-php">&lt;?php
+    //Menüpontok létrehozása
+    function uri($menuSzam)
+    {       
+        // A $_SERVER['PHP_SELF'] megadja az aktuális fájl (index.php) nevét.
+        // Ezt fűzzük össze a ?menu=x paraméterrel.
+        return htmlspecialchars($_SERVER['PHP_SELF']) . "?menu=" . $menuSzam;
+    }
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROUTER.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">include/router.php - Az Útválasztó (Routing)</h3>
+                <p><strong>Szerepe:</strong> Ő a közlekedési rendőr. Megvizsgálja a böngésző címsorát (az URL paramétereket a <code>$_GET</code> szuperglobális tömbön keresztül), és egy <code>switch</code> (többszörös elágazás) segítségével eldönti, melyik aloldalt kell betölteni. A kigenerált HTML szöveget eltárolja a <code>$mainContent</code> nevű változóban.</p>
+                <div class="code-wrapper">
+                    <div class="code-header">include/router.php</div>
+<pre class="language-php"><code class="language-php">&lt;?php
+    //útvonalVálasztás - A "?? 0" operátor alapértelmezett értéket ad, ha a menu paraméter üres
+    switch($_GET["menu"] ?? 0)
+    {
+        case 1:
+        default: // Ha valami mást ír be a felhasználó, automatikusan a főoldal jön be
+            include("include/fooldal.php");
+            $mainContent = fooldal(); // A függvény visszatérési értékét (HTML) elmentjük
+            break;
+        case 2:
+            include("include/aloldal.php");
+            $mainContent = aloldal();
+            break;
+        case 3:
+            include("include/urlap.php");
+            $mainContent = urlap();
+            feldolgozas(); // Itt hívjuk meg az űrlap feldolgozását is!
+            break;
+    }
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- LAYOUT.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">include/layout.php - A Kinézet (View)</h3>
+                <p><strong>Szerepe:</strong> Ez a mester-sablon. Egy szoftverfejlesztésben fontos a <em>Separation of Concerns</em> (Felelősségi körök szétválasztása), azaz a logika (PHP) és a kinézet (HTML) minél jobb elkülönítése. Ez a fájl biztosítja a Bootstrap keretrendszert, beemeli a menüt, és a megfelelő helyre "beilleszti" a router által összeállított <code>$mainContent</code> változót.</p>
+                <div class="code-wrapper">
+                    <div class="code-header">include/layout.php (rövidített verzió)</div>
+<pre class="language-php"><code class="language-php">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+    &lt;head&gt;
+        &lt;meta charset="UTF-8"&gt;
+        &lt;title&gt;Űrlap&lt;/title&gt;
+        &lt;!-- Bootstrap betöltése --&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+    &lt;div class="container"&gt;
+        &lt;div class="row"&gt;
+            &lt;header class="col-12"&gt;&lt;h1&gt;Oldal&lt;/h1&gt;&lt;/header&gt;
+            
+            &lt;!-- Navigáció beemelése --&gt;
+            &lt;?php include_once("include/navbar.php");?&gt;
+
+            &lt;div class="col-12"&gt;
+                &lt;!-- Itt jelenik meg a tényleges aloldal tartalma! --&gt;
+                &lt;?php echo $mainContent;?&gt;
+            &lt;/div&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVBAR.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">include/navbar.php - A Menüsáv</h3>
+                <p><strong>Szerepe:</strong> Külön fájlban tároljuk a menüt, hogy könnyen módosítható legyen. Észreveheted, hogy a linkek (<code>href</code> attribútumok) nem konkrét HTML fájlokra mutatnak, hanem a korábban megírt <code>uri()</code> függvényt használják, ami dinamikusan generálja le a <code>?menu=1</code>, <code>?menu=2</code> linkeket.</p>
+                <div class="code-wrapper">
+                    <div class="code-header">include/navbar.php (rövidített verzió)</div>
+<pre class="language-php"><code class="language-php">&lt;nav class="navbar navbar-expand-lg bg-body-tertiary"&gt;
+    &lt;ul class="navbar-nav"&gt;
+        &lt;li class="nav-item"&gt;
+            &lt;!-- PHP-val iratjuk ki a biztonságos URL-t --&gt;
+            &lt;a class="nav-link" href="&lt;?php echo uri(1) ?&gt;"&gt;Főoldal&lt;/a&gt;
+        &lt;/li&gt;
+        &lt;li class="nav-item"&gt;
+            &lt;a class="nav-link" href="&lt;?php echo uri(2) ?&gt;"&gt;Aloldal&lt;/a&gt;
+        &lt;/li&gt;
+        &lt;li class="nav-item"&gt;
+            &lt;a class="nav-link" href="&lt;?php echo uri(3) ?&gt;"&gt;Űrlap&lt;/a&gt;
+        &lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOOLDAL.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">include/fooldal.php - Egyszerű Tartalom</h3>
+                <p><strong>Szerepe:</strong> Egy egyszerű aloldal, amely egyetlen függvényt (<code>fooldal()</code>) tartalmaz. Ez a függvény szövegként (string) téríti vissza a megjelenítendő HTML kódot. (Szakmai tipp: Modern rendszerekben a HTML-t általában nem írjuk bele stringként a PHP-ba, de tanulási fázisban ez elfogadott megoldás).</p>
+                <div class="code-wrapper">
+                    <div class="code-header">include/fooldal.php</div>
+<pre class="language-php"><code class="language-php">&lt;?php
+function fooldal(){
+    // Egyszerű HTML kód visszatérítése
+    return '&lt;img src="include/kep.jpg" alt="" class="img-fluid"&gt;
+    &lt;p&gt;Lorem ipsum dolor sit, amet consectetur adipisicing elit.&lt;/p&gt;';
+}
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- URLAP.PHP -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">include/urlap.php - Logika és Interakció</h3>
+                <p><strong>Szerepe:</strong> Ez a legösszetettebb fájl, hiszen két feladata is van. Az <code>urlap()</code> függvény legenerálja az űrlap kinézetét. A <code>feldolgozas()</code> függvény pedig lefut, ha a felhasználó rákattintott a mentés gombra. Kicseréli a sortöréseket, hozzáfűzi (FILE_APPEND) az adatokat a fájlhoz, végül átirányítja az oldalt. Ezt az átirányítást <strong>PRG (Post/Redirect/Get) mintának</strong> nevezzük, ami megakadályozza, hogy F5 (Frissítés) gomb nyomásakor az űrlap újra elküldésre kerüljön!</p>
+                <div class="code-wrapper">
+                    <div class="code-header">include/urlap.php</div>
+<pre class="language-php"><code class="language-php">&lt;?php
+function urlap(){
+    $szoveg = "";
+    // Az űrlap arra az URL-re küldi az adatot POST metódussal, ahol épp vagyunk
+    $szoveg .= '&lt;form action="'.uri(3).'" method="post"&gt;';
+    $szoveg .= '&lt;input class="form-control" type="text" name="nev"&gt;';
+    $szoveg .= '&lt;button type="submit" name="adatMentes" class="btn btn-primary"&gt;Mentés&lt;/button&gt;';
+    $szoveg .= '&lt;/form&gt;';
+    return $szoveg;
+}
+
+function feldolgozas(){
+    // Megvizsgáljuk, hogy történt-e gombnyomás
+    if(isset($_POST["adatMentes"])){
+        // 1. Sortörések takarítása (egy sorba fogunk menteni!)
+        $szoveg = str_replace(["\r\n","\n","\r"], "\\n", $_POST['szoveg']);
+        
+        // 2. Mentés a fájl végére, pontosvesszővel elválasztva
+        file_put_contents('save.txt', $_POST['nev'] .";". $_POST['email'] . ';'. $szoveg  . PHP_EOL, FILE_APPEND);
+        
+        // 3. PRG minta: átirányítjuk a felhasználót az adatok megérkezése után
+        header("location:". uri(3));
+        exit(); // Megállítjuk a további kód lefutását
+    }
+}
+?&gt;</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- SAVE.TXT -->
+        <div class="card file-card">
+            <div class="card-body">
+                <h3 class="card-title">save.txt - Az "Adatbázis"</h3>
+                <p><strong>Szerepe:</strong> Mivel a projekt még nem használ SQL adatbázist, az adatokat egy egyszerű szöveges fájlban perzisztáljuk (tároljuk el tartósan). A pontosvessző (;) szolgál az oszlopok, az új sor (PHP_EOL) pedig a rekordok elválasztására (hasonlóan a CSV fájlokhoz).</p>
+                <div class="code-wrapper">
+                    <div class="code-header">save.txt</div>
+<pre class="language-text"><code class="language-text">; ; hrh\nezeg\njzjzu
+Kovács Péter;peter@email.hu;Ez egy próba\nüzenet\ntöbb sorral.</code></pre>
+                </div>
+            </div>
+        </div>
+
+    </section>
+</div>
+
+<!-- Szkriptek -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Mermaid.js az ábrához -->
+<script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+<!-- Prism.js a kódszínezéshez -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-php.min.js"></script>
+</body>
+</html>
