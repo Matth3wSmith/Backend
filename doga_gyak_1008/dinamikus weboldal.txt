@@ -1,0 +1,9 @@
+dinamikus weboldal
+4 oldalból álló portál
+legyen egyforma szerkezete az egésznek
+bal oldalt legyen a menüsáv
+1. oldal: 1 nagy kép, minden oldalon cím
+2. oldal: hosszabb szöveg, 3-4 kép beszúrva a szövevgbe
+3. oldal: űrlap ahol bekérünk: nevet, üzenet többsoros (textarea) bekérés adatait mentse el egy fájlba 
+dátummal és idővel magyar időzóna, a beküldés dátuma
+4. oldal: jelenítse meg a táblázatban a fájl adatait időrendben

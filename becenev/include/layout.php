@@ -1,3 +1,7 @@
+<?php
+/** @var string $mainContent */
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
